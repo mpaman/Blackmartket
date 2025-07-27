@@ -1,0 +1,8 @@
+# Go build output
+bin/
+*.exe
+*.out
+*.test
+
+# Go modules
+vendor/
