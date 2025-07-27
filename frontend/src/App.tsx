@@ -23,6 +23,7 @@ const App = () => (
         <Toaster />
         <Sonner />
         <BrowserRouter>
+          {/* ADD ALL CUSTOM ROUTES BELOW THE CATCH-ALL "*" ROUTE */}
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/products" element={<AllProducts />} />
