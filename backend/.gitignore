@@ -3,6 +3,7 @@ bin/
 *.exe
 *.out
 *.test
-
+*.db
 # Go modules
 vendor/
+config/

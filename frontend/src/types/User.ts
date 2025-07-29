@@ -11,3 +11,10 @@ export interface User {
   order?: Order[];
   profile_image_url?: string;
 }
+export interface SignupData {
+  name: string;
+  email: string;
+  password: string;
+  phone?: string;
+  address?: string;
+}

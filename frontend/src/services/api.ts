@@ -53,11 +53,25 @@ export const getProductById = (id: number) =>
 export const getAllCategories = () =>
   axios.get<Category[]>(`${apiUrl}/categories`);
 
+export const getCategories = () =>
+  axios.get<Category[]>(`${apiUrl}/categories`);
+
 export const createCategory = (data: { Name: string }) =>
   axios.post(`${apiUrl}/categories`, data, authHeader());
 
-export const createProduct = (data: Partial<Product>) =>
-  axios.post(`${apiUrl}/api/products`, data, authHeader());
+export const createProduct = (data: {
+  name: string;
+  description: string;
+  price: number;
+  category_id: number;
+  images: Array<{
+    url: string;
+    alt?: string;
+  }>;
+}) => {
+  console.log("Creating product with data:", data);
+  return axios.post(`${apiUrl}/api/products`, data, authHeader());
+};
 
 export const deleteProduct = (id: number) =>
   axios.delete(`${apiUrl}/api/products/${id}`, authHeader());
