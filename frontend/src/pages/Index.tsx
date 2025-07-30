@@ -187,6 +187,9 @@ const Index = () => {
                                         <DropdownMenuItem onClick={() => alert("Go to Profile")}>
                                             My Profile
                                         </DropdownMenuItem>
+                                        <DropdownMenuItem onClick={() => navigate('/seller-management')}>
+                                            Manage Products
+                                        </DropdownMenuItem>
                                         <DropdownMenuItem onClick={handleLogout} className="text-red-500">
                                             Logout
                                         </DropdownMenuItem>
@@ -263,8 +266,8 @@ const Index = () => {
                                 Sports
                             </button>
                         </div>
-                        <Button 
-                            size="sm" 
+                        <Button
+                            size="sm"
                             className="bg-green-600 hover:bg-green-700 text-white"
                             onClick={handleSellClick}
                         >
@@ -284,16 +287,16 @@ const Index = () => {
                         Buy and sell pre-loved items with confidence. Quality products at unbeatable prices.
                     </p>
                     <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                        <Button 
-                            size="lg" 
+                        <Button
+                            size="lg"
                             className="bg-white text-green-600 hover:bg-gray-100"
                             onClick={handleStartShoppingClick}
                         >
                             Start Shopping
                         </Button>
-                        <Button 
-                            size="lg" 
-                            variant="outline" 
+                        <Button
+                            size="lg"
+                            variant="outline"
                             className="border-white text-green-600 hover:bg-white hover:text-green-600"
                             onClick={handleSellClick}
                         >
@@ -415,8 +418,8 @@ const Index = () => {
                     <p className="text-xl text-green-100 mb-8 max-w-2xl mx-auto">
                         Turn your unused items into cash. Join thousands of sellers on JuPiShop.
                     </p>
-                    <Button 
-                        size="lg" 
+                    <Button
+                        size="lg"
                         className="bg-white text-green-600 hover:bg-gray-100"
                         onClick={handleSellClick}
                     >

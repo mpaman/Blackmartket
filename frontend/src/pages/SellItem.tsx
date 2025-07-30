@@ -51,13 +51,7 @@ const SellItem = () => {
         fetchCategories();
     }, [toast]);
 
-    // Check if user is logged in - only show login dialog if not logged in
-    useEffect(() => {
-        console.log('SellItem - isLoggedIn:', isLoggedIn);
-        if (!isLoggedIn) {
-            setIsLoginOpen(true);
-        }
-    }, [isLoggedIn]);
+
 
     // Handle successful login
     const handleLoginSuccess = () => {
