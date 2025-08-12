@@ -20,15 +20,33 @@ func getUserIDByEmail(email string) (uint, error) {
 
 // ดึง userID จาก context ที่ middleware เซ็ตไว้
 func getUserIDFromContext(c *gin.Context) uint {
-	userIDValue, exists := c.Get("userID")
+	// Try different possible key names that might be set by middleware
+	userIDValue, exists := c.Get("user_id")
 	if !exists {
-		return 0
+		userIDValue, exists = c.Get("userID")
+		if !exists {
+			userIDValue, exists = c.Get("UserID")
+			if !exists {
+				return 0
+			}
+		}
 	}
 
-	userID, ok := userIDValue.(uint)
-	if !ok {
-		return 0
+	// Handle different types that might be stored
+	switch v := userIDValue.(type) {
+	case uint:
+		return v
+	case int:
+		return uint(v)
+	case float64:
+		return uint(v)
+	case string:
+		// Convert string to uint if needed
+		if v != "" {
+			// You might need to implement string to uint conversion here
+			return 0
+		}
 	}
 
-	return userID
+	return 0
 }

@@ -31,12 +31,11 @@ func SetupRouter() *gin.Engine {
 	auth.Use(middlewares.Authorizes())
 	auth.GET("/current-user", controllers.GetCurrentUser)
 	auth.PUT("/update-profile-image", controllers.UpdateProfileImage)
-	// Category
-	// auth.GET("/categories", controllers.GetAllCategories)
-	// auth.POST("/categories", controllers.CreateCategory)
 
 	// Product
 	auth.POST("/products", controllers.CreateProduct)
+	auth.GET("/user/products", controllers.GetUserProducts)
+	auth.PUT("/products/:id", controllers.UpdateProduct)
 	auth.DELETE("/products/:id", controllers.DeleteProduct)
 
 	// Cart

@@ -17,6 +17,9 @@ export const isLoggedIn = (): boolean => {
   return !!token;
 };
 
+export const getProductById = (id: number) =>
+  axios.get<Product>(`${apiUrl}/products/${id}`);
+
 export const logout = (): void => {
   localStorage.removeItem("token");
   localStorage.removeItem("token_type");
@@ -47,17 +50,58 @@ export const getRootStatus = () => axios.get(`${apiUrl}/`);
 
 export const getAllProducts = () => axios.get<Product[]>(`${apiUrl}/products`);
 
-export const getProductById = (id: number) =>
-  axios.get<Product>(`${apiUrl}/products/${id}`);
-
 export const getAllCategories = () =>
   axios.get<Category[]>(`${apiUrl}/categories`);
 
-export const getCategories = () =>
-  axios.get<Category[]>(`${apiUrl}/categories`);
+// ใช้ GetUserProducts จาก backend
+export const GetUserProducts = async (): Promise<{ data: Product[] }> => {
+  try {
+    console.log("Calling GetUserProducts API...");
+    const response = await axios.get<Product[]>(
+      `${apiUrl}/api/user/products`,
+      authHeader()
+    );
+    console.log("GetUserProducts response:", response.data);
+    return { data: response.data || [] };
+  } catch (error) {
+    console.error("GetUserProducts error:", error);
+    throw error;
+  }
+};
 
-export const createCategory = (data: { Name: string }) =>
-  axios.post(`${apiUrl}/categories`, data, authHeader());
+// ใช้ updateProduct จาก backend
+export const updateProduct = async (
+  id: number,
+  data: {
+    name: string;
+    description: string;
+    price: number;
+    category_id: number;
+    images: Array<{
+      url: string;
+      alt?: string;
+    }>;
+  }
+) => {
+  try {
+    console.log("Updating product with ID:", id, "Data:", data);
+    return await axios.put(`${apiUrl}/api/products/${id}`, data, authHeader());
+  } catch (error) {
+    console.error("updateProduct error:", error);
+    throw error;
+  }
+};
+
+// ใช้ deleteProduct จาก backend
+export const deleteProduct = async (id: number) => {
+  try {
+    console.log("Deleting product with ID:", id);
+    return await axios.delete(`${apiUrl}/api/products/${id}`, authHeader());
+  } catch (error) {
+    console.error("deleteProduct error:", error);
+    throw error;
+  }
+};
 
 export const createProduct = (data: {
   name: string;
@@ -72,9 +116,6 @@ export const createProduct = (data: {
   console.log("Creating product with data:", data);
   return axios.post(`${apiUrl}/api/products`, data, authHeader());
 };
-
-export const deleteProduct = (id: number) =>
-  axios.delete(`${apiUrl}/api/products/${id}`, authHeader());
 
 export const getUserCart = () =>
   axios.get<Cart>(`${apiUrl}/api/cart`, authHeader());
