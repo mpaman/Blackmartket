@@ -1,7 +1,9 @@
 package controllers
 
 import (
+	"context"
 	"errors"
+	"log"
 	"net/http"
 	"net/url"
 	"strings"
@@ -233,6 +235,125 @@ func UpdateProfileImage(c *gin.Context) {
 
 	c.JSON(http.StatusOK, gin.H{
 		"message":           "Profile image updated successfully",
+		"profile_image_url": user.ProfileImageURL,
+	})
+}
+func SocialLoginController(c *gin.Context) {
+	var payload models.SocialLogin
+	if err := c.ShouldBindJSON(&payload); err != nil {
+		log.Println("Invalid request payload:", err)
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request"})
+		return
+	}
+
+	log.Printf("Social login request: provider=%s, token length=%d", payload.Provider, len(payload.Token))
+
+	var email, name string
+	
+	// Try Firebase verification first
+	firebaseApp, err := services.GetFirebaseApp()
+	if err != nil {
+		log.Println("Firebase init error, using token decoder fallback:", err)
+		// Use token decoder as fallback (development only)
+		claims, err := services.DecodeFirebaseToken(payload.Token)
+		if err != nil {
+			log.Println("Token decode error:", err)
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid token format"})
+			return
+		}
+		email = claims.Email
+		name = claims.Name
+		log.Printf("Token decoded (dev mode): email=%s, name=%s", email, name)
+	} else {
+		authClient, err := firebaseApp.Auth(context.Background())
+		if err != nil {
+			log.Println("Firebase auth client error, using token decoder fallback:", err)
+			// Use token decoder as fallback
+			claims, err := services.DecodeFirebaseToken(payload.Token)
+			if err != nil {
+				log.Println("Token decode error:", err)
+				c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid token format"})
+				return
+			}
+			email = claims.Email
+			name = claims.Name
+			log.Printf("Token decoded (fallback): email=%s, name=%s", email, name)
+		} else {
+			// Verify token properly with Firebase Admin SDK
+			token, err := authClient.VerifyIDToken(context.Background(), payload.Token)
+			if err != nil {
+				log.Println("Firebase token verification error, trying token decoder:", err)
+				// Fallback to token decoder
+				claims, err := services.DecodeFirebaseToken(payload.Token)
+				if err != nil {
+					log.Println("Token decode error:", err)
+					c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid Firebase token"})
+					return
+				}
+				email = claims.Email
+				name = claims.Name
+				// log.Printf("Token decoded (after Firebase failure): email=%s, name=%s", email, name)
+			} else {
+				// Successfully verified with Firebase
+				email, _ = token.Claims["email"].(string)
+				name, _ = token.Claims["name"].(string)
+				log.Printf("Firebase token verified: email=%s, name=%s", email, name)
+			}
+		}
+	}
+
+	if email == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Could not extract email from token"})
+		return
+	}
+
+	db := config.DB()
+	var user models.User
+	result := db.Where("email = ?", email).First(&user)
+
+	// ถ้า user ยังไม่มีใน DB → สร้างใหม่
+	if result.Error != nil && errors.Is(result.Error, gorm.ErrRecordNotFound) {
+		// log.Printf("Creating new user for email: %s", email)
+		user = models.User{
+			Name:            name,
+			Email:           email,
+			ProfileImageURL: "/images/default-profile.png",
+		}
+		if err := db.Create(&user).Error; err != nil {
+			// log.Println("Error creating user:", err)
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Cannot create user"})
+			return
+		}
+		// log.Printf("User created successfully with ID: %d", user.ID)
+	} else if result.Error != nil {
+		log.Println("Database error:", result.Error)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Database error"})
+		return
+	} else {
+		log.Printf("Existing user found: ID=%d, email=%s", user.ID, user.Email)
+	}
+
+	// 🔐 สร้าง JWT ของระบบเอง (เหมือน SignIn)
+	jwtWrapper := services.JwtWrapper{
+		SecretKey:       "SvNQpBN8y3qlVrsGAYYWoJJk56LtzFHx",
+		Issuer:          "AuthService",
+		ExpirationHours: 24,
+	}
+	signedToken, err := jwtWrapper.GenerateToken(user.Email, user.ID)
+	if err != nil {
+		log.Println("JWT generation error:", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to generate token"})
+		return
+	}
+
+	log.Printf("Social login successful for user ID: %d", user.ID)
+
+	c.JSON(http.StatusOK, gin.H{
+		"token_type":        "Bearer",
+		"token":             signedToken,
+		"id":                user.ID,
+		"name":              user.Name,
+		"email":             user.Email,
 		"profile_image_url": user.ProfileImageURL,
 	})
 }

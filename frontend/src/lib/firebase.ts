@@ -1,5 +1,5 @@
 import { initializeApp } from 'firebase/app';
-import { getStorage } from 'firebase/storage';
+import { FacebookAuthProvider, getAuth, GoogleAuthProvider } from 'firebase/auth';
 
 const firebaseConfig = {
   apiKey: "AIzaSyBgF4EPIZHe8FNvk0YMMW-gG-wQ62_ILXU",
@@ -8,8 +8,10 @@ const firebaseConfig = {
   storageBucket: "black-market-fcdbc.firebasestorage.app",
   messagingSenderId: "144784682822",
   appId: "1:144784682822:web:98cabc098d26eba10d3f47",
-  measurementId: "G-JYEPLETMB0",
+  measurementId: "G-JYEPLETMB0"
 };
 
-const app = initializeApp(firebaseConfig);
-export const storage = getStorage(app);
+export const app = initializeApp(firebaseConfig);
+export const auth = getAuth(app);
+export const googleProvider = new GoogleAuthProvider();
+export const facebookProvider = new FacebookAuthProvider();

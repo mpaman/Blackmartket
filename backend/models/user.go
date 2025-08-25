@@ -19,3 +19,7 @@ type Address struct {
 	Phone   string `json:"phone"`
 	Address string `json:"address"`
 }
+type SocialLogin struct {
+	Token    string `json:"token"`
+	Provider string `json:"provider"`
+}

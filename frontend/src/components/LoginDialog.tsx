@@ -12,6 +12,8 @@ import {
 import { Separator } from "@/components/ui/separator";
 import { Mail, Lock, User, Phone, Facebook, Github, Image } from "lucide-react";
 import { SignIn, Signup } from "@/services/api";
+import { getAuth, signInWithPopup, GoogleAuthProvider } from "firebase/auth";
+import { app } from "@/lib/firebase";
 
 interface AuthResponse {
   token: string;
@@ -27,7 +29,7 @@ interface LoginDialogProps {
   onOpenChange: (open: boolean) => void;
 }
 
-export const LoginDialog = ({ open, onOpenChange }: LoginDialogProps) => {
+const LoginDialog = ({ open, onOpenChange }: LoginDialogProps) => {
   const [isSignUp, setIsSignUp] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -115,10 +117,49 @@ export const LoginDialog = ({ open, onOpenChange }: LoginDialogProps) => {
     }
   };
 
+  const handleSocialLogin = async (provider: string) => {
+    if (provider === "Google") {
+      try {
+        const auth = getAuth(app);
+        const googleProvider = new GoogleAuthProvider();
+        const result = await signInWithPopup(auth, googleProvider);
+        const user = result.user;
+        const token = await user.getIdToken();
 
-  const handleSocialLogin = (provider: string) => {
-    console.log(`Login with ${provider}`);
-    // Handle social login logic here
+        console.log("Google login successful, sending to backend...");
+
+        // Send token to backend for verification and JWT
+        const response = await fetch("http://localhost:8000/api/auth/social-login", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ provider: "Google", token }),
+        });
+        
+        const data = await response.json();
+        console.log("Backend response:", data);
+        
+        if (response.ok) {
+          localStorage.setItem("token", data.token);
+          localStorage.setItem("token_type", data.token_type);
+          localStorage.setItem("user_id", data.id?.toString() || "");
+          localStorage.setItem("user_name", data.name || "");
+          localStorage.setItem("user_email", data.email || "");
+          localStorage.setItem("user_profile_image", data.profile_image_url || "");
+          alert("Google login successful!");
+          onOpenChange(false);
+          window.location.reload();
+        } else {
+          console.error("Backend error:", data);
+          alert(data.error || "Google login failed. Please try again.");
+        }
+      } catch (error: any) {
+        console.error("Google login error:", error);
+        alert("Google login failed. Please try again.");
+      }
+    } else {
+      console.log(`Login with ${provider}`);
+      // Handle other social login logic here
+    }
   };
 
   return (
@@ -236,7 +277,6 @@ export const LoginDialog = ({ open, onOpenChange }: LoginDialogProps) => {
             </div>
           )}
 
-
           <Button type="submit" className="w-full bg-green-600 hover:bg-green-700">
             {isSignUp ? "Create Account" : "Sign In"}
           </Button>
@@ -303,4 +343,6 @@ export const LoginDialog = ({ open, onOpenChange }: LoginDialogProps) => {
       </DialogContent>
     </Dialog>
   );
-};
+}
+
+export { LoginDialog };

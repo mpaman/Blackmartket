@@ -14,7 +14,6 @@ const PORT = "8000"
 func SetupRouter() *gin.Engine {
 	r := gin.Default()
 	r.Use(CORSMiddleware())
-
 	// Public Routes
 	r.POST("/signup", controllers.SignUp)
 	r.POST("/signin", controllers.SignIn)
@@ -59,6 +58,7 @@ func SetupRouter() *gin.Engine {
 	auth.GET("/addresses", controllers.GetUserAddresses)
 	auth.POST("/addresses", controllers.AddAddress)
 
+	r.POST("/api/auth/social-login", controllers.SocialLoginController)
 	return r
 }
 
