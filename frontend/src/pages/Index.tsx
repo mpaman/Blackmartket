@@ -184,7 +184,7 @@ const Index = () => {
                                         </Button>
                                     </DropdownMenuTrigger>
                                     <DropdownMenuContent className="w-40 mt-2">
-                                        <DropdownMenuItem onClick={() => alert("Go to Profile")}>
+                                        <DropdownMenuItem onClick={() => navigate("/profile")}>
                                             My Profile
                                         </DropdownMenuItem>
                                         <DropdownMenuItem onClick={() => navigate('/seller-management')}>

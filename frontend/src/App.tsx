@@ -15,7 +15,7 @@ import Wishlist from "./pages/Wishlist";
 import NotFound from "./pages/NotFound";
 import SellItem from "./pages/SellItem";
 import SellerManagement from "./pages/SellerManagement";
-
+import MyProfile from "./pages/MyProfile";
 const queryClient = new QueryClient();
 
 const App = () => (
@@ -28,6 +28,7 @@ const App = () => (
           {/* ADD ALL CUSTOM ROUTES BELOW THE CATCH-ALL "*" ROUTE */}
           <Routes>
             <Route path="/" element={<Index />} />
+            <Route path="/profile" element={<MyProfile />} />
             <Route path="/products" element={<AllProducts />} />
             <Route path="/product/:id" element={<ProductDetail />} />
             <Route path="/cart" element={<Cart />} />

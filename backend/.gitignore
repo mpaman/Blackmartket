@@ -4,6 +4,7 @@ bin/
 *.out
 *.test
 *.db
+.env
 # Go modules
 vendor/
 config/

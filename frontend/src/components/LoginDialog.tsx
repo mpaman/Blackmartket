@@ -288,7 +288,6 @@ export const LoginDialog = ({ open, onOpenChange }: LoginDialogProps) => {
             Facebook
           </Button>
         </div>
-
         <div className="text-center text-sm">
           <span className="text-gray-600">
             {isSignUp ? "Already have an account?" : "Don't have an account?"}
