@@ -20,6 +20,7 @@ import {
     DropdownMenu,
     DropdownMenuContent,
     DropdownMenuItem,
+    DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -60,6 +61,13 @@ const AllProducts = () => {
     const [categoriesLoading, setCategoriesLoading] = useState(true);
     const [error, setError] = useState("");
 
+    // User profile data
+    const [userProfile, setUserProfile] = useState({
+        name: "",
+        email: "",
+        profileImage: ""
+    });
+
     // Check for category parameter from URL
     useEffect(() => {
         const categoryParam = searchParams.get('category');
@@ -97,6 +105,21 @@ const AllProducts = () => {
                 setCategoriesLoading(false);
             });
     }, []);
+
+    // Load user profile data
+    useEffect(() => {
+        if (isLoggedIn) {
+            const userName = localStorage.getItem("user_name") || "";
+            const userEmail = localStorage.getItem("user_email") || "";
+            const userProfileImage = localStorage.getItem("user_profile_image") || "";
+            
+            setUserProfile({
+                name: userName,
+                email: userEmail,
+                profileImage: userProfileImage
+            });
+        }
+    }, [isLoggedIn]);
 
     // Filter products based on selected category
     const filteredProducts = selectedCategory === "all"
@@ -205,6 +228,14 @@ const AllProducts = () => {
         localStorage.removeItem("user_name");
         localStorage.removeItem("user_email");
         localStorage.removeItem("user_profile_image");
+        
+        // Clear user profile state
+        setUserProfile({
+            name: "",
+            email: "",
+            profileImage: ""
+        });
+        
         window.location.reload();
     };
 
@@ -221,8 +252,8 @@ const AllProducts = () => {
             setIsLoginOpen(true);
             return;
         }
-        // If logged in, you could navigate to profile or show user menu
-        alert("Go to Profile");
+        // Navigate to profile page
+        navigate('/profile');
     };
 
     return (
@@ -274,16 +305,51 @@ const AllProducts = () => {
                                 <DropdownMenu>
                                     <DropdownMenuTrigger asChild>
                                         <Button variant="ghost" size="icon" className="rounded-full p-0">
-                                            <Avatar>
-                                                <AvatarImage src="/avatar.jpg" alt="user" />
-                                                <AvatarFallback>User</AvatarFallback>
+                                            <Avatar className="h-8 w-8">
+                                                <AvatarImage 
+                                                    src={userProfile.profileImage || "/avatar.jpg"} 
+                                                    alt={userProfile.name || "User"} 
+                                                />
+                                                <AvatarFallback className="text-sm font-medium">
+                                                    {userProfile.name 
+                                                        ? userProfile.name.slice(0, 2).toUpperCase() 
+                                                        : "US"}
+                                                </AvatarFallback>
                                             </Avatar>
                                         </Button>
                                     </DropdownMenuTrigger>
-                                    <DropdownMenuContent className="w-40 mt-2">
-                                        <DropdownMenuItem onClick={() => alert("Go to Profile")}>
+                                    <DropdownMenuContent className="w-56 mt-2" align="end">
+                                        <div className="flex items-center space-x-3 p-3 border-b">
+                                            <Avatar className="h-10 w-10">
+                                                <AvatarImage 
+                                                    src={userProfile.profileImage || "/avatar.jpg"} 
+                                                    alt={userProfile.name || "User"} 
+                                                />
+                                                <AvatarFallback className="text-sm font-medium">
+                                                    {userProfile.name 
+                                                        ? userProfile.name.slice(0, 2).toUpperCase() 
+                                                        : "US"}
+                                                </AvatarFallback>
+                                            </Avatar>
+                                            <div className="flex-1 min-w-0">
+                                                <p className="text-sm font-medium text-gray-900 truncate">
+                                                    {userProfile.name || "User"}
+                                                </p>
+                                                <p className="text-xs text-gray-500 truncate">
+                                                    {userProfile.email || "user@example.com"}
+                                                </p>
+                                            </div>
+                                        </div>
+                                        <DropdownMenuSeparator />
+                                        <DropdownMenuItem onClick={() => navigate("/profile")}>
+                                            <User className="mr-2 h-4 w-4" />
                                             My Profile
                                         </DropdownMenuItem>
+                                        <DropdownMenuItem onClick={() => navigate('/seller-management')}>
+                                            <ShoppingCart className="mr-2 h-4 w-4" />
+                                            Manage Products
+                                        </DropdownMenuItem>
+                                        <DropdownMenuSeparator />
                                         <DropdownMenuItem onClick={handleLogout} className="text-red-500">
                                             Logout
                                         </DropdownMenuItem>

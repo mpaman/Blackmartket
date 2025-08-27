@@ -6,9 +6,17 @@ import { useNavigate } from "react-router-dom";
 import { useWishlist } from "@/contexts/WishlistContext";
 import { useToast } from "@/hooks/use-toast";
 import { useCart } from "@/hooks/use-cart";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { LoginDialog } from "@/components/LoginDialog";
 import { addToCart as addToCartAPI, updateCartItem, getUserCart } from "@/services/api";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuSeparator,
+    DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 const Wishlist = () => {
   const navigate = useNavigate();
@@ -16,6 +24,28 @@ const Wishlist = () => {
   const { wishlistItems, removeFromWishlist, wishlistCount } = useWishlist();
   const { cartCount, isLoggedIn, refreshCartCount } = useCart();
   const [isLoginOpen, setIsLoginOpen] = useState(false);
+
+  // User profile data
+  const [userProfile, setUserProfile] = useState({
+    name: "",
+    email: "",
+    profileImage: ""
+  });
+
+  // Load user profile data
+  useEffect(() => {
+    if (isLoggedIn) {
+      const userName = localStorage.getItem("user_name") || "";
+      const userEmail = localStorage.getItem("user_email") || "";
+      const userProfileImage = localStorage.getItem("user_profile_image") || "";
+      
+      setUserProfile({
+        name: userName,
+        email: userEmail,
+        profileImage: userProfileImage
+      });
+    }
+  }, [isLoggedIn]);
 
   const handleAddToCart = async (product: any) => {
     if (!isLoggedIn) {
@@ -80,8 +110,26 @@ const Wishlist = () => {
       setIsLoginOpen(true);
       return;
     }
-    // Navigate to profile or show user menu
-    alert("Go to Profile");
+    // Navigate to profile page
+    navigate('/profile');
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem("token");
+    localStorage.removeItem("token_type");
+    localStorage.removeItem("user_id");
+    localStorage.removeItem("user_name");
+    localStorage.removeItem("user_email");
+    localStorage.removeItem("user_profile_image");
+    
+    // Clear user profile state
+    setUserProfile({
+      name: "",
+      email: "",
+      profileImage: ""
+    });
+    
+    window.location.reload();
   };
 
   return (
@@ -117,15 +165,71 @@ const Wishlist = () => {
                   <Badge className="ml-1 bg-green-600 text-white">{cartCount}</Badge>
                 )}
               </Button>
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                className="text-gray-600 hover:text-green-600"
-                onClick={handleAccountClick}
-              >
-                <User className="w-4 h-4 mr-1" />
-                <span className="hidden sm:inline">Account</span>
-              </Button>
+              {isLoggedIn ? (
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" size="icon" className="rounded-full p-0">
+                      <Avatar className="h-8 w-8">
+                        <AvatarImage 
+                          src={userProfile.profileImage || "/avatar.jpg"} 
+                          alt={userProfile.name || "User"} 
+                        />
+                        <AvatarFallback className="text-sm font-medium">
+                          {userProfile.name 
+                            ? userProfile.name.slice(0, 2).toUpperCase() 
+                            : "US"}
+                        </AvatarFallback>
+                      </Avatar>
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent className="w-56 mt-2" align="end">
+                    <div className="flex items-center space-x-3 p-3 border-b">
+                      <Avatar className="h-10 w-10">
+                        <AvatarImage 
+                          src={userProfile.profileImage || "/avatar.jpg"} 
+                          alt={userProfile.name || "User"} 
+                        />
+                        <AvatarFallback className="text-sm font-medium">
+                          {userProfile.name 
+                            ? userProfile.name.slice(0, 2).toUpperCase() 
+                            : "US"}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium text-gray-900 truncate">
+                          {userProfile.name || "User"}
+                        </p>
+                        <p className="text-xs text-gray-500 truncate">
+                          {userProfile.email || "user@example.com"}
+                        </p>
+                      </div>
+                    </div>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem onClick={() => navigate("/profile")}>
+                      <User className="mr-2 h-4 w-4" />
+                      My Profile
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => navigate('/seller-management')}>
+                      <ShoppingCart className="mr-2 h-4 w-4" />
+                      Manage Products
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem onClick={handleLogout} className="text-red-500">
+                      Logout
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              ) : (
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  className="text-gray-600 hover:text-green-600"
+                  onClick={handleAccountClick}
+                >
+                  <User className="w-4 h-4 mr-1" />
+                  <span className="hidden sm:inline">Account</span>
+                </Button>
+              )}
             </div>
           </div>
         </div>
@@ -215,9 +319,6 @@ const Wishlist = () => {
                       )}
                     </div>
                   </div>
-                  {product.user?.name && (
-                    <p className="text-sm text-gray-500 mb-4">by {product.user.name}</p>
-                  )}
                   <div className="flex gap-2">
                     <Button 
                       className="flex-1 bg-green-600 hover:bg-green-700 text-white"

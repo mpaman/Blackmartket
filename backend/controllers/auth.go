@@ -38,6 +38,11 @@ func isValidImageURL(imageURL string) bool {
 		return true // Empty is valid, will use default
 	}
 
+	// Check if it's a base64 data URL (for uploaded images)
+	if strings.HasPrefix(imageURL, "data:image/") {
+		return true
+	}
+
 	// Check if it's a valid URL
 	if _, err := url.ParseRequestURI(imageURL); err != nil {
 		// If not a valid URL, check if it's a relative path
@@ -236,6 +241,169 @@ func UpdateProfileImage(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{
 		"message":           "Profile image updated successfully",
 		"profile_image_url": user.ProfileImageURL,
+	})
+}
+
+// UpdateUserProfile updates the user's profile information
+func UpdateUserProfile(c *gin.Context) {
+	userID, exists := c.Get("userID")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "User not found in context"})
+		return
+	}
+
+	var payload struct {
+		Name            string `json:"name"`
+		Email           string `json:"email"`
+		ProfileImageURL string `json:"profile_image_url"`
+		Phone           string `json:"phone"`
+		Address         string `json:"address"`
+	}
+
+	if err := c.ShouldBindJSON(&payload); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	// Validate required fields
+	if payload.Name == "" || payload.Email == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Name and email are required"})
+		return
+	}
+
+	// Validate profile image URL if provided
+	if payload.ProfileImageURL != "" && !isValidImageURL(payload.ProfileImageURL) {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid profile image URL format"})
+		return
+	}
+
+	// Set default profile image if not provided
+	if payload.ProfileImageURL == "" {
+		payload.ProfileImageURL = "/images/default-profile.png"
+	}
+
+	db := config.DB()
+	var user models.User
+
+	// Get current user
+	if err := db.Preload("Address").First(&user, userID).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Cannot find user"})
+		return
+	}
+
+	// Check if email is being changed and if it's already taken by another user
+	if user.Email != payload.Email {
+		var existingUser models.User
+		if err := db.Where("email = ? AND id != ?", payload.Email, userID).First(&existingUser).Error; err == nil {
+			c.JSON(http.StatusConflict, gin.H{"error": "Email is already taken by another user"})
+			return
+		}
+	}
+
+	// Update user fields
+	user.Name = payload.Name
+	user.Email = payload.Email
+	user.ProfileImageURL = payload.ProfileImageURL
+
+	// Update or create address
+	if len(user.Address) > 0 {
+		// Update existing address
+		user.Address[0].Phone = payload.Phone
+		user.Address[0].Address = payload.Address
+		if err := db.Save(&user.Address[0]).Error; err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update address"})
+			return
+		}
+	} else {
+		// Create new address
+		newAddress := models.Address{
+			UserID:  user.ID,
+			Phone:   payload.Phone,
+			Address: payload.Address,
+		}
+		if err := db.Create(&newAddress).Error; err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create address"})
+			return
+		}
+		user.Address = []models.Address{newAddress}
+	}
+
+	// Save user changes
+	if err := db.Save(&user).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update profile"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"message":           "Profile updated successfully",
+		"id":                user.ID,
+		"name":              user.Name,
+		"email":             user.Email,
+		"profile_image_url": user.ProfileImageURL,
+		"address":           user.Address,
+	})
+}
+
+// ChangePassword allows users to change their password
+func ChangePassword(c *gin.Context) {
+	userID, exists := c.Get("userID")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "User not found in context"})
+		return
+	}
+
+	var payload struct {
+		CurrentPassword string `json:"current_password"`
+		NewPassword     string `json:"new_password"`
+	}
+
+	if err := c.ShouldBindJSON(&payload); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	// Validate required fields
+	if payload.CurrentPassword == "" || payload.NewPassword == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Current password and new password are required"})
+		return
+	}
+
+	// Validate new password length
+	if len(payload.NewPassword) < 6 {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "New password must be at least 6 characters long"})
+		return
+	}
+
+	db := config.DB()
+	var user models.User
+
+	if err := db.First(&user, userID).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Cannot find user"})
+		return
+	}
+
+	// Verify current password
+	if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(payload.CurrentPassword)); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Current password is incorrect"})
+		return
+	}
+
+	// Hash new password
+	hashedPassword, err := config.HashPassword(payload.NewPassword)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to hash new password"})
+		return
+	}
+
+	// Update password
+	user.Password = hashedPassword
+	if err := db.Save(&user).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update password"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"message": "Password changed successfully",
 	})
 }
 func SocialLoginController(c *gin.Context) {

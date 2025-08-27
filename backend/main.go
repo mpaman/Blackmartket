@@ -30,6 +30,8 @@ func SetupRouter() *gin.Engine {
 	auth.Use(middlewares.Authorizes())
 	auth.GET("/current-user", controllers.GetCurrentUser)
 	auth.PUT("/update-profile-image", controllers.UpdateProfileImage)
+	auth.PUT("/update-profile", controllers.UpdateUserProfile)
+	auth.PUT("/change-password", controllers.ChangePassword)
 
 	// Product
 	auth.POST("/products", controllers.CreateProduct)

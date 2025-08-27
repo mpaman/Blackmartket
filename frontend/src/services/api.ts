@@ -147,3 +147,20 @@ export const getCurrentUser = () =>
 
 export const updateProfileImage = (data: { profile_image_url: string }) =>
   axios.put(`${apiUrl}/api/update-profile-image`, data, authHeader());
+
+export const updateUserProfile = (data: {
+  name: string;
+  email: string;
+  profile_image_url?: string;
+  phone?: string;
+  address?: string;
+}) => axios.put(`${apiUrl}/api/update-profile`, data, authHeader());
+
+export const changePassword = (data: {
+  current_password: string;
+  new_password: string;
+}) => axios.put(`${apiUrl}/api/change-password`, data, authHeader());
+
+export const GetUserAddresses = () =>
+  axios.get(`${apiUrl}/api/addresses`, authHeader());
+
