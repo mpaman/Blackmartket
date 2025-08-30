@@ -3,7 +3,8 @@ import type { User } from "@/types/User";
 import type { Product } from "@/types/Product";
 import type { Category } from "@/types/Category";
 import type { Cart } from "@/types/Cart";
-
+import type { CartItem } from "@/types/CartItem";
+import type { Address } from "@/types/Address";
 const apiUrl = "http://localhost:8000";
 
 const authHeader = () => {
@@ -53,7 +54,6 @@ export const getAllProducts = () => axios.get<Product[]>(`${apiUrl}/products`);
 export const getAllCategories = () =>
   axios.get<Category[]>(`${apiUrl}/categories`);
 
-// ใช้ GetUserProducts จาก backend
 export const GetUserProducts = async (): Promise<{ data: Product[] }> => {
   try {
     console.log("Calling GetUserProducts API...");
@@ -69,20 +69,7 @@ export const GetUserProducts = async (): Promise<{ data: Product[] }> => {
   }
 };
 
-// ใช้ updateProduct จาก backend
-export const updateProduct = async (
-  id: number,
-  data: {
-    name: string;
-    description: string;
-    price: number;
-    category_id: number;
-    images: Array<{
-      url: string;
-      alt?: string;
-    }>;
-  }
-) => {
+export const updateProduct = async (id: string, data: Product) => {
   try {
     console.log("Updating product with ID:", id, "Data:", data);
     return await axios.put(`${apiUrl}/api/products/${id}`, data, authHeader());
@@ -92,7 +79,6 @@ export const updateProduct = async (
   }
 };
 
-// ใช้ deleteProduct จาก backend
 export const deleteProduct = async (id: number) => {
   try {
     console.log("Deleting product with ID:", id);
@@ -103,16 +89,7 @@ export const deleteProduct = async (id: number) => {
   }
 };
 
-export const createProduct = (data: {
-  name: string;
-  description: string;
-  price: number;
-  category_id: number;
-  images: Array<{
-    url: string;
-    alt?: string;
-  }>;
-}) => {
+export const createProduct = (data: { product }) => {
   console.log("Creating product with data:", data);
   return axios.post(`${apiUrl}/api/products`, data, authHeader());
 };
@@ -164,6 +141,48 @@ export const changePassword = (data: {
 export const GetUserAddresses = () =>
   axios.get(`${apiUrl}/api/addresses`, authHeader());
 
+// Address management
+export const addAddress = async (addressData: any) => {
+  const token = localStorage.getItem("token");
+  const response = await axios.post(
+    `${apiUrl}/api/addresses`,
+    addressData,
+    {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    }
+  );
+  return response;
+};
+
+export const deleteAddress = async (addressId: number) => {
+  const token = localStorage.getItem("token");
+  const response = await axios.delete(
+    `${apiUrl}/api/addresses/${addressId}`,
+    {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    }
+  );
+  return response;
+};
+
+export const updateAddress = async (addressId: number, addressData: any) => {
+  const token = localStorage.getItem("token");
+  const response = await axios.put(
+    `${apiUrl}/api/addresses/${addressId}`,
+    addressData,
+    {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    }
+  );
+  return response;
+};
+
 // Checkout APIs
 export const getCheckoutSession = () =>
   axios.get(`${apiUrl}/api/checkout`, authHeader());
@@ -182,7 +201,6 @@ export const processCheckout = (data: {
   payment_method: string;
 }) =>
   axios.post(`${apiUrl}/api/checkout`, data, authHeader());
-
 export const getOrderStatus = (orderId: number) =>
   axios.get(`${apiUrl}/api/checkout/order/${orderId}`, authHeader());
 
@@ -205,4 +223,3 @@ export const getOrderById = async (orderId: string) => {
   });
   return response.data;
 };
-

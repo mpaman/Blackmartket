@@ -65,6 +65,8 @@ func SetupRouter() *gin.Engine {
 	// Address
 	auth.GET("/addresses", controllers.GetUserAddresses)
 	auth.POST("/addresses", controllers.AddAddress)
+	auth.PUT("/addresses/:id", controllers.UpdateAddress)
+	auth.DELETE("/addresses/:id", controllers.DeleteAddress)
 
 	r.POST("/api/auth/social-login", controllers.SocialLoginController)
 	return r

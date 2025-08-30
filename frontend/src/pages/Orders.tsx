@@ -6,40 +6,8 @@ import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
 import { getUserOrders } from "@/services/api";
 import { useNavigate } from "react-router-dom";
-
-interface OrderItem {
-    ID: number;
-    product_id: number;
-    quantity: number;
-    price: number;
-    product?: {
-        ID: number;
-        name: string; // Changed from 'title' to 'name' to match backend
-        price: number;
-        images?: Array<{
-            ID: number;
-            url: string; // Changed from 'image_url' to 'url' to match backend
-        }>;
-    };
-}
-
-interface Order {
-    ID: number;
-    status: string;
-    total_price: number;
-    created_at: string;
-    updated_at: string;
-    items?: OrderItem[];
-    address?: {
-        ID: number;
-        first_name: string;
-        last_name: string;
-        phone: string;
-        address: string;
-        city: string;
-        postal_code: string;
-    };
-}
+import { Order } from "@/types/Order";
+import { OrderItem } from "@/types/OrderItem";
 
 export default function Orders() {
     const [orders, setOrders] = useState<Order[]>([]);
@@ -166,7 +134,7 @@ export default function Orders() {
                             <CardHeader>
                                 <div className="flex items-center justify-between">
                                     <CardTitle className="text-lg">
-                                        Order #{order.ID}
+                                        My Order
                                     </CardTitle>
                                     <Badge className={getStatusColor(order.status)}>
                                         {order.status.charAt(0).toUpperCase() + order.status.slice(1)}

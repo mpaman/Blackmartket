@@ -11,11 +11,11 @@ import { LoginDialog } from "@/components/LoginDialog";
 import { addToCart as addToCartAPI, updateCartItem, getUserCart } from "@/services/api";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
-    DropdownMenu,
-    DropdownMenuContent,
-    DropdownMenuItem,
-    DropdownMenuSeparator,
-    DropdownMenuTrigger,
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
 const Wishlist = () => {
@@ -38,7 +38,7 @@ const Wishlist = () => {
       const userName = localStorage.getItem("user_name") || "";
       const userEmail = localStorage.getItem("user_email") || "";
       const userProfileImage = localStorage.getItem("user_profile_image") || "";
-      
+
       setUserProfile({
         name: userName,
         email: userEmail,
@@ -74,7 +74,7 @@ const Wishlist = () => {
 
       // Refresh cart count
       refreshCartCount();
-      
+
       toast({
         title: "Added to Cart",
         description: `${product.title} has been added to your cart.`,
@@ -121,14 +121,14 @@ const Wishlist = () => {
     localStorage.removeItem("user_name");
     localStorage.removeItem("user_email");
     localStorage.removeItem("user_profile_image");
-    
+
     // Clear user profile state
     setUserProfile({
       name: "",
       email: "",
       profileImage: ""
     });
-    
+
     window.location.reload();
   };
 
@@ -153,9 +153,9 @@ const Wishlist = () => {
             </div>
 
             <div className="flex items-center space-x-4">
-              <Button 
-                variant="ghost" 
-                size="sm" 
+              <Button
+                variant="ghost"
+                size="sm"
                 className="text-gray-600 hover:text-green-600"
                 onClick={handleCartClick}
               >
@@ -170,13 +170,13 @@ const Wishlist = () => {
                   <DropdownMenuTrigger asChild>
                     <Button variant="ghost" size="icon" className="rounded-full p-0">
                       <Avatar className="h-8 w-8">
-                        <AvatarImage 
-                          src={userProfile.profileImage || "/avatar.jpg"} 
-                          alt={userProfile.name || "User"} 
+                        <AvatarImage
+                          src={userProfile.profileImage || "/avatar.jpg"}
+                          alt={userProfile.name || "User"}
                         />
                         <AvatarFallback className="text-sm font-medium">
-                          {userProfile.name 
-                            ? userProfile.name.slice(0, 2).toUpperCase() 
+                          {userProfile.name
+                            ? userProfile.name.slice(0, 2).toUpperCase()
                             : "US"}
                         </AvatarFallback>
                       </Avatar>
@@ -185,13 +185,13 @@ const Wishlist = () => {
                   <DropdownMenuContent className="w-56 mt-2" align="end">
                     <div className="flex items-center space-x-3 p-3 border-b">
                       <Avatar className="h-10 w-10">
-                        <AvatarImage 
-                          src={userProfile.profileImage || "/avatar.jpg"} 
-                          alt={userProfile.name || "User"} 
+                        <AvatarImage
+                          src={userProfile.profileImage || "/avatar.jpg"}
+                          alt={userProfile.name || "User"}
                         />
                         <AvatarFallback className="text-sm font-medium">
-                          {userProfile.name 
-                            ? userProfile.name.slice(0, 2).toUpperCase() 
+                          {userProfile.name
+                            ? userProfile.name.slice(0, 2).toUpperCase()
                             : "US"}
                         </AvatarFallback>
                       </Avatar>
@@ -220,9 +220,9 @@ const Wishlist = () => {
                   </DropdownMenuContent>
                 </DropdownMenu>
               ) : (
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
+                <Button
+                  variant="ghost"
+                  size="sm"
                   className="text-gray-600 hover:text-green-600"
                   onClick={handleAccountClick}
                 >
@@ -248,7 +248,7 @@ const Wishlist = () => {
             <Heart className="w-16 h-16 text-gray-300 mx-auto mb-4" />
             <h3 className="text-xl font-semibold text-gray-900 mb-2">Your wishlist is empty</h3>
             <p className="text-gray-600 mb-6">Start adding products you love to your wishlist.</p>
-            <Button 
+            <Button
               className="bg-green-600 hover:bg-green-700 text-white"
               onClick={() => navigate('/products')}
             >
@@ -258,13 +258,13 @@ const Wishlist = () => {
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {wishlistItems.map((product) => (
-              <Card 
-                key={product.id} 
+              <Card
+                key={product.id}
                 className="hover:shadow-xl transition-all duration-300 group cursor-pointer"
               >
                 <div className="relative overflow-hidden">
-                  <img 
-                    src={product.image} 
+                  <img
+                    src={product.image}
                     alt={product.title}
                     className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300"
                     onClick={() => navigate(`/product/${product.id}`)}
@@ -277,9 +277,9 @@ const Wishlist = () => {
                       {Math.round((1 - product.price / product.originalPrice) * 100)}% OFF
                     </Badge>
                   )}
-                  <Button 
-                    size="sm" 
-                    variant="ghost" 
+                  <Button
+                    size="sm"
+                    variant="ghost"
                     className="absolute top-3 right-3 bg-white/80 hover:bg-white text-red-500 hover:text-red-600"
                     onClick={() => handleRemoveFromWishlist(product.id, product.title)}
                   >
@@ -287,7 +287,7 @@ const Wishlist = () => {
                   </Button>
                 </div>
                 <CardContent className="p-4">
-                  <h4 
+                  <h4
                     className="font-semibold text-gray-900 mb-2 line-clamp-2 cursor-pointer hover:text-green-600"
                     onClick={() => navigate(`/product/${product.id}`)}
                   >
@@ -320,13 +320,13 @@ const Wishlist = () => {
                     </div>
                   </div>
                   <div className="flex gap-2">
-                    <Button 
+                    <Button
                       className="flex-1 bg-green-600 hover:bg-green-700 text-white"
                       onClick={() => handleAddToCart(product)}
                     >
                       Add to Cart
                     </Button>
-                    <Button 
+                    <Button
                       variant="outline"
                       size="sm"
                       onClick={() => navigate(`/product/${product.id}`)}

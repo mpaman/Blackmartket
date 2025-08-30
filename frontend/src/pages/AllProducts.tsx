@@ -45,7 +45,7 @@ import { LoginDialog } from "@/components/LoginDialog";
 const AllProducts = () => {
     const navigate = useNavigate();
     const { toast } = useToast();
-    const [searchParams] = useSearchParams();
+    const [searchParams, setSearchParams] = useSearchParams();
     const { addToWishlist, removeFromWishlist, isInWishlist, wishlistCount } = useWishlist();
     const { cartCount, isLoggedIn, refreshCartCount } = useCart();
 
@@ -53,6 +53,7 @@ const AllProducts = () => {
     const [sortBy, setSortBy] = useState("newest");
     const [viewMode, setViewMode] = useState("grid");
     const [selectedCategory, setSelectedCategory] = useState("all");
+    const [searchQuery, setSearchQuery] = useState(""); // Add search state
     const productsPerPage = 12;
     const [isLoginOpen, setIsLoginOpen] = useState(false);
     const [products, setProducts] = useState<Product[]>([]);
@@ -68,11 +69,17 @@ const AllProducts = () => {
         profileImage: ""
     });
 
-    // Check for category parameter from URL
+    // Check for search and category parameters from URL
     useEffect(() => {
         const categoryParam = searchParams.get('category');
+        const searchParam = searchParams.get('search');
+        
         if (categoryParam) {
             setSelectedCategory(categoryParam);
+        }
+        
+        if (searchParam) {
+            setSearchQuery(searchParam);
         }
     }, [searchParams]);
 
@@ -100,7 +107,6 @@ const AllProducts = () => {
             })
             .catch((err) => {
                 console.error("Failed to load categories:", err);
-                // Fallback to empty array if categories fail to load
                 setCategories([]);
                 setCategoriesLoading(false);
             });
@@ -112,7 +118,7 @@ const AllProducts = () => {
             const userName = localStorage.getItem("user_name") || "";
             const userEmail = localStorage.getItem("user_email") || "";
             const userProfileImage = localStorage.getItem("user_profile_image") || "";
-            
+
             setUserProfile({
                 name: userName,
                 email: userEmail,
@@ -121,10 +127,36 @@ const AllProducts = () => {
         }
     }, [isLoggedIn]);
 
-    // Filter products based on selected category
-    const filteredProducts = selectedCategory === "all"
-        ? products
-        : products.filter(product => product.category?.name === selectedCategory);
+    // Enhanced search and filter function
+    const getFilteredProducts = () => {
+        let filtered = [...products];
+
+        // Filter by category
+        if (selectedCategory !== "all") {
+            filtered = filtered.filter(product => 
+                product.category?.name === selectedCategory
+            );
+        }
+
+        // Filter by search query (search in product name, description, and seller name)
+        if (searchQuery.trim()) {
+            const query = searchQuery.toLowerCase().trim();
+            filtered = filtered.filter(product => {
+                const productName = product.name?.toLowerCase() || '';
+                const productDescription = product.description?.toLowerCase() || '';
+                const sellerName = product.user?.name?.toLowerCase() || '';
+                
+                return productName.includes(query) || 
+                       productDescription.includes(query) || 
+                       sellerName.includes(query);
+            });
+        }
+
+        return filtered;
+    };
+
+    // Get filtered products
+    const filteredProducts = getFilteredProducts();
 
     // Sort products
     const sortedProducts = [...filteredProducts].sort((a, b) => {
@@ -133,8 +165,9 @@ const AllProducts = () => {
                 return a.price - b.price;
             case "price-high":
                 return b.price - a.price;
-            // case "rating":
-            //   return b.views - a.views;
+            case "rating":
+                // If you have rating field, use it here
+                return 0; // placeholder
             default:
                 return b.ID - a.ID; // newest first
         }
@@ -144,6 +177,49 @@ const AllProducts = () => {
     const totalPages = Math.ceil(sortedProducts.length / productsPerPage);
     const startIndex = (currentPage - 1) * productsPerPage;
     const currentProducts = sortedProducts.slice(startIndex, startIndex + productsPerPage);
+
+    // Search handler
+    const handleSearch = (e: React.FormEvent) => {
+        e.preventDefault();
+        setCurrentPage(1); // Reset to first page
+        
+        // Update URL params
+        const newSearchParams = new URLSearchParams(searchParams);
+        if (searchQuery.trim()) {
+            newSearchParams.set('search', searchQuery.trim());
+        } else {
+            newSearchParams.delete('search');
+        }
+        setSearchParams(newSearchParams);
+    };
+
+    const handleSearchInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        setSearchQuery(e.target.value);
+    };
+
+    const handleCategoryChange = (category: string) => {
+        setSelectedCategory(category);
+        setCurrentPage(1); // Reset to first page
+        
+        // Update URL params
+        const newSearchParams = new URLSearchParams(searchParams);
+        if (category !== "all") {
+            newSearchParams.set('category', category);
+        } else {
+            newSearchParams.delete('category');
+        }
+        setSearchParams(newSearchParams);
+    };
+
+    const clearSearch = () => {
+        setSearchQuery("");
+        setCurrentPage(1);
+        
+        // Update URL params
+        const newSearchParams = new URLSearchParams(searchParams);
+        newSearchParams.delete('search');
+        setSearchParams(newSearchParams);
+    };
 
     const handleWishlistToggle = (productId: number) => {
         const product = products.find(p => p.ID === productId);
@@ -161,13 +237,13 @@ const AllProducts = () => {
             // Fix: Map Product to WishlistItem structure
             addToWishlist({
                 id: product.ID,
-                title: product.name,
+                title: product.name, // Changed from title to name
                 originalPrice: product.price,
                 image: product.images?.[0]?.url || '/placeholder.svg',
-                seller: 'Unknown Seller', // Remove seller property reference
+                seller: product.user?.name || 'Unknown Seller', // Use actual seller name
                 price: product.price,
-                rating: 0, // Remove rating property reference
-                condition: 'New', // Remove condition property reference
+                rating: 0,
+                condition: 'New',
                 category: product.category?.name || 'Uncategorized'
             });
             toast({
@@ -221,6 +297,7 @@ const AllProducts = () => {
         }
     };
 
+    
     const handleLogout = () => {
         localStorage.removeItem("token");
         localStorage.removeItem("token_type");
@@ -228,14 +305,14 @@ const AllProducts = () => {
         localStorage.removeItem("user_name");
         localStorage.removeItem("user_email");
         localStorage.removeItem("user_profile_image");
-        
+
         // Clear user profile state
         setUserProfile({
             name: "",
             email: "",
             profileImage: ""
         });
-        
+
         window.location.reload();
     };
 
@@ -254,6 +331,14 @@ const AllProducts = () => {
         }
         // Navigate to profile page
         navigate('/profile');
+    };
+
+    // Helper function for search highlighting
+    const highlightSearchTerm = (text: string, searchTerm: string) => {
+        if (!searchTerm.trim()) return text;
+        
+        const regex = new RegExp(`(${searchTerm.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
+        return text.replace(regex, '<mark class="bg-yellow-200 rounded px-1">$1</mark>');
     };
 
     return (
@@ -306,13 +391,13 @@ const AllProducts = () => {
                                     <DropdownMenuTrigger asChild>
                                         <Button variant="ghost" size="icon" className="rounded-full p-0">
                                             <Avatar className="h-8 w-8">
-                                                <AvatarImage 
-                                                    src={userProfile.profileImage || "/avatar.jpg"} 
-                                                    alt={userProfile.name || "User"} 
+                                                <AvatarImage
+                                                    src={userProfile.profileImage || "/avatar.jpg"}
+                                                    alt={userProfile.name || "User"}
                                                 />
                                                 <AvatarFallback className="text-sm font-medium">
-                                                    {userProfile.name 
-                                                        ? userProfile.name.slice(0, 2).toUpperCase() 
+                                                    {userProfile.name
+                                                        ? userProfile.name.slice(0, 2).toUpperCase()
                                                         : "US"}
                                                 </AvatarFallback>
                                             </Avatar>
@@ -321,13 +406,13 @@ const AllProducts = () => {
                                     <DropdownMenuContent className="w-56 mt-2" align="end">
                                         <div className="flex items-center space-x-3 p-3 border-b">
                                             <Avatar className="h-10 w-10">
-                                                <AvatarImage 
-                                                    src={userProfile.profileImage || "/avatar.jpg"} 
-                                                    alt={userProfile.name || "User"} 
+                                                <AvatarImage
+                                                    src={userProfile.profileImage || "/avatar.jpg"}
+                                                    alt={userProfile.name || "User"}
                                                 />
                                                 <AvatarFallback className="text-sm font-medium">
-                                                    {userProfile.name 
-                                                        ? userProfile.name.slice(0, 2).toUpperCase() 
+                                                    {userProfile.name
+                                                        ? userProfile.name.slice(0, 2).toUpperCase()
                                                         : "US"}
                                                 </AvatarFallback>
                                             </Avatar>
@@ -344,6 +429,9 @@ const AllProducts = () => {
                                         <DropdownMenuItem onClick={() => navigate("/profile")}>
                                             <User className="mr-2 h-4 w-4" />
                                             My Profile
+                                        </DropdownMenuItem>
+                                        <DropdownMenuItem onClick={() => navigate('/orders')}>
+                                            My Orders
                                         </DropdownMenuItem>
                                         <DropdownMenuItem onClick={() => navigate('/seller-management')}>
                                             <ShoppingCart className="mr-2 h-4 w-4" />
@@ -372,21 +460,41 @@ const AllProducts = () => {
             </header>
 
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-                {/* Search and Filters */}
+                {/* Enhanced Search and Filters */}
                 <div className="mb-8">
                     <div className="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between">
                         <div className="flex-1 max-w-md">
-                            <div className="relative">
+                            <form onSubmit={handleSearch} className="relative flex">
                                 <Input
-                                    placeholder="Search products..."
+                                    placeholder="Search products, brands, or sellers..."
                                     className="pl-10 pr-4 py-2 w-full border-gray-200 focus:border-green-500"
+                                    value={searchQuery}
+                                    onChange={handleSearchInputChange}
                                 />
                                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-                            </div>
+                                <Button 
+                                    type="submit" 
+                                    className="ml-2 bg-green-600 hover:bg-green-700 text-white"
+                                    size="sm"
+                                >
+                                    Search
+                                </Button>
+                                {searchQuery && (
+                                    <Button 
+                                        type="button"
+                                        variant="outline"
+                                        size="sm"
+                                        className="ml-1"
+                                        onClick={clearSearch}
+                                    >
+                                        Clear
+                                    </Button>
+                                )}
+                            </form>
                         </div>
 
                         <div className="flex items-center gap-4">
-                            <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+                            <Select value={selectedCategory} onValueChange={handleCategoryChange}>
                                 <SelectTrigger className="w-40">
                                     <SelectValue placeholder={categoriesLoading ? "Loading..." : "Category"} />
                                 </SelectTrigger>
@@ -437,21 +545,70 @@ const AllProducts = () => {
                             </div>
                         </div>
                     </div>
+
+                    {/* Search Results Info */}
+                    {searchQuery && (
+                        <div className="mt-4 p-3 bg-green-50 border border-green-200 rounded-lg">
+                            <p className="text-sm text-green-800">
+                                <span className="font-medium">Search results for:</span> "{searchQuery}"
+                                {selectedCategory !== "all" && (
+                                    <span> in <span className="font-medium">{selectedCategory}</span></span>
+                                )}
+                            </p>
+                            {filteredProducts.length === 0 && (
+                                <p className="text-sm text-green-600 mt-1">
+                                    No products found. Try different keywords or browse all products.
+                                </p>
+                            )}
+                        </div>
+                    )}
                 </div>
 
-                {/* Results Summary */}
+                {/* Enhanced Results Summary */}
                 <div className="mb-6">
                     <p className="text-gray-600">
-                        Showing {startIndex + 1}-{Math.min(startIndex + productsPerPage, sortedProducts.length)} of {sortedProducts.length} products
+                        Showing {filteredProducts.length > 0 ? startIndex + 1 : 0}-{Math.min(startIndex + productsPerPage, filteredProducts.length)} of {filteredProducts.length} products
                         {selectedCategory !== "all" && ` in ${selectedCategory}`}
+                        {searchQuery && ` matching "${searchQuery}"`}
                     </p>
                 </div>
 
                 {/* Product Grid */}
                 {loading ? (
-                    <div>Loading products...</div>
+                    <div className="text-center py-8">
+                        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600 mx-auto mb-4"></div>
+                        <p className="text-gray-600">Loading products...</p>
+                    </div>
                 ) : error ? (
-                    <div>{error}</div>
+                    <div className="text-center py-8">
+                        <p className="text-red-500 mb-4">{error}</p>
+                        <Button onClick={() => window.location.reload()}>
+                            Try Again
+                        </Button>
+                    </div>
+                ) : filteredProducts.length === 0 ? (
+                    <div className="text-center py-12">
+                        <div className="text-6xl mb-4">🔍</div>
+                        <h3 className="text-xl font-semibold text-gray-900 mb-2">
+                            {searchQuery ? 'No products found' : 'No products available'}
+                        </h3>
+                        <p className="text-gray-600 mb-6">
+                            {searchQuery 
+                                ? `We couldn't find any products matching "${searchQuery}". Try different keywords or browse all products.`
+                                : 'There are no products available at the moment.'
+                            }
+                        </p>
+                        <div className="flex gap-4 justify-center">
+                            {searchQuery && (
+                                <Button onClick={clearSearch} variant="outline">
+                                    Clear Search
+                                </Button>
+                            )}
+                            <Button onClick={() => navigate('/products')}>
+                                Browse All Products
+                            </Button>
+                        </div>
+                    </div>
                 ) : (
                     <div className={`grid gap-6 mb-8 ${viewMode === "grid"
                         ? "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
@@ -466,14 +623,17 @@ const AllProducts = () => {
                             >
                                 <div className={`relative overflow-hidden ${viewMode === "list" ? "w-48 flex-shrink-0" : ""}`}>
                                     <img
-                                        src={product.images?.[0]?.url || '/placeholder.svg'}
+                                        src={product.images?.[0]?.url?.startsWith('data:')
+                                            ? product.images[0].url
+                                            : product.images?.[0]?.url || '/placeholder.svg'}
                                         alt={product.name}
                                         className={`object-cover group-hover:scale-105 transition-transform duration-300 ${viewMode === "list" ? "w-full h-full" : "w-full h-48"
                                             }`}
+                                        onError={(e) => {
+                                            const target = e.target as HTMLImageElement;
+                                            target.src = '/placeholder.svg';
+                                        }}
                                     />
-                                    {/* <Badge className="absolute top-3 left-3 bg-green-600 text-white">
-                    {Math.round((1 - product.price / product.originalPrice) * 100)}% OFF
-                  </Badge> */}
                                     <Button
                                         size="sm"
                                         variant="ghost"
@@ -488,15 +648,16 @@ const AllProducts = () => {
                                     </Button>
                                 </div>
                                 <CardContent className={`p-4 ${viewMode === "list" ? "flex-1" : ""}`}>
-                                    <h4 className="font-semibold text-gray-900 mb-2 line-clamp-2">{product.name}</h4>
+                                    <h4 className="font-semibold text-gray-900 mb-2 line-clamp-2">
+                                        {searchQuery ? (
+                                            <span dangerouslySetInnerHTML={{
+                                                __html: highlightSearchTerm(product.name, searchQuery)
+                                            }} />
+                                        ) : (
+                                            product.name
+                                        )}
+                                    </h4>
                                     <div className="flex items-center gap-2 mb-2">
-                                        {/* <div className="flex items-center">
-                      <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-                      <span className="text-sm text-gray-600 ml-1">{product.rating}</span>
-                    </div> */}
-                                        {/* <Badge variant="secondary" className="text-xs">
-                      {product.condition}
-                    </Badge> */}
                                         <Badge variant="outline" className="text-xs">
                                             {product.category?.name}
                                         </Badge>
@@ -506,7 +667,16 @@ const AllProducts = () => {
                                             <p className="text-lg font-bold text-green-600">฿{product.price.toLocaleString()}</p>
                                         </div>
                                     </div>
-                                    <p className="text-sm text-gray-500 mt-2">by {product.user?.name}</p>
+                                    <p className="text-sm text-gray-500 mt-2">
+                                        by{' '}
+                                        {searchQuery && product.user?.name ? (
+                                            <span dangerouslySetInnerHTML={{
+                                                __html: highlightSearchTerm(product.user.name, searchQuery)
+                                            }} />
+                                        ) : (
+                                            product.user?.name || 'Unknown Seller'
+                                        )}
+                                    </p>
                                     <div className="flex gap-2 mt-4">
                                         <Button
                                             className="flex-1 bg-green-600 hover:bg-green-700 text-white"
@@ -546,17 +716,30 @@ const AllProducts = () => {
                                 />
                             </PaginationItem>
 
-                            {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-                                <PaginationItem key={page}>
-                                    <PaginationLink
-                                        onClick={() => setCurrentPage(page)}
-                                        isActive={currentPage === page}
-                                        className="cursor-pointer"
-                                    >
-                                        {page}
-                                    </PaginationLink>
-                                </PaginationItem>
-                            ))}
+                            {Array.from({ length: Math.min(totalPages, 5) }, (_, i) => {
+                                let page;
+                                if (totalPages <= 5) {
+                                    page = i + 1;
+                                } else if (currentPage <= 3) {
+                                    page = i + 1;
+                                } else if (currentPage >= totalPages - 2) {
+                                    page = totalPages - 4 + i;
+                                } else {
+                                    page = currentPage - 2 + i;
+                                }
+                                
+                                return (
+                                    <PaginationItem key={page}>
+                                        <PaginationLink
+                                            onClick={() => setCurrentPage(page)}
+                                            isActive={currentPage === page}
+                                            className="cursor-pointer"
+                                        >
+                                            {page}
+                                        </PaginationLink>
+                                    </PaginationItem>
+                                );
+                            })}
 
                             <PaginationItem>
                                 <PaginationNext

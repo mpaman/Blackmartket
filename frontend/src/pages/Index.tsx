@@ -24,6 +24,7 @@ import type { Category } from "@/types/Category";
 const Index = () => {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
     const [isLoginOpen, setIsLoginOpen] = useState(false);
+    const [searchQuery, setSearchQuery] = useState(""); // Add search state
     const navigate = useNavigate();
     const { addToWishlist, removeFromWishlist, isInWishlist, wishlistCount } = useWishlist();
     const { toast } = useToast();
@@ -152,6 +153,20 @@ const Index = () => {
         navigate('/products');
     };
 
+    // Add search handler
+    const handleSearch = (e: React.FormEvent) => {
+        e.preventDefault();
+        if (searchQuery.trim()) {
+            navigate(`/products?search=${encodeURIComponent(searchQuery.trim())}`);
+        } else {
+            navigate('/products');
+        }
+    };
+
+    const handleSearchInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        setSearchQuery(e.target.value);
+    };
+
     return (
         <div className="min-h-screen bg-white">
             {/* Header */}
@@ -166,16 +181,21 @@ const Index = () => {
 
                         {/* Search Bar - Desktop */}
                         <div className="hidden md:flex flex-1 max-w-lg mx-8">
-                            <div className="relative w-full">
+                            <form onSubmit={handleSearch} className="relative w-full flex">
                                 <Input
                                     placeholder="Search for products, brands, or sellers..."
                                     className="pl-10 pr-4 py-2 w-full border-gray-200 focus:border-green-500 focus:ring-green-500"
+                                    value={searchQuery}
+                                    onChange={handleSearchInputChange}
                                 />
                                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-                            </div>
-                            <Button className="ml-2 bg-green-600 hover:bg-green-700 text-white">
-                                Search
-                            </Button>
+                                <Button 
+                                    type="submit" 
+                                    className="ml-2 bg-green-600 hover:bg-green-700 text-white"
+                                >
+                                    Search
+                                </Button>
+                            </form>
                         </div>
 
                         {/* Header Actions */}
@@ -286,13 +306,22 @@ const Index = () => {
 
                 {/* Mobile Search */}
                 <div className="md:hidden px-4 pb-4">
-                    <div className="relative">
+                    <form onSubmit={handleSearch} className="relative flex">
                         <Input
-                            placeholder="Search products..."
+                            placeholder="Search products or sellers..."
                             className="pl-10 pr-4 py-2 w-full border-gray-200 focus:border-green-500"
+                            value={searchQuery}
+                            onChange={handleSearchInputChange}
                         />
                         <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-                    </div>
+                        <Button 
+                            type="submit" 
+                            size="sm" 
+                            className="ml-2 bg-green-600 hover:bg-green-700 text-white"
+                        >
+                            Search
+                        </Button>
+                    </form>
                 </div>
             </header>
 
@@ -307,14 +336,7 @@ const Index = () => {
                             >
                                 All Categories
                             </button>
-                            {isLoggedIn && (
-                                <button
-                                    onClick={() => navigate('/checkout')}
-                                    className="text-blue-600 hover:text-blue-800 font-medium text-sm"
-                                >
-                                    🧪 Test Checkout
-                                </button>
-                            )}
+
                             <button
                                 onClick={() => handleCategoryClick('Electronics')}
                                 className="text-gray-600 hover:text-green-600 text-sm hidden sm:block"

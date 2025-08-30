@@ -7,40 +7,8 @@ import { Separator } from "@/components/ui/separator";
 import { ArrowLeft } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { getOrderById } from "@/services/api";
-
-interface OrderItem {
-    ID: number;
-    product_id: number;
-    quantity: number;
-    price: number;
-    product?: {
-        ID: number;
-        name: string; // Changed from 'title' to 'name'
-        price: number;
-        images?: Array<{
-            ID: number;
-            url: string; // Changed from 'image_url' to 'url'
-        }>;
-    };
-}
-
-interface Order {
-    ID: number;
-    status: string;
-    total_price: number;
-    created_at: string;
-    updated_at: string;
-    items?: OrderItem[];
-    address?: {
-        ID: number;
-        first_name: string;
-        last_name: string;
-        phone: string;
-        address: string;
-        city: string;
-        postal_code: string;
-    };
-}
+import { Order } from "@/types/Order";
+import { OrderItem } from "@/types/OrderItem";
 
 export default function OrderDetail() {
     const { id } = useParams<{ id: string }>();
@@ -185,8 +153,8 @@ export default function OrderDetail() {
                                             <div className="flex items-center space-x-4">
                                                 {item.product?.images && item.product.images[0] && (
                                                     <img
-                                                        src={item.product.images[0].url.startsWith('data:') 
-                                                            ? item.product.images[0].url 
+                                                        src={item.product.images[0].url.startsWith('data:')
+                                                            ? item.product.images[0].url
                                                             : `http://localhost:8000${item.product.images[0].url}`
                                                         }
                                                         alt={item.product.name}
@@ -261,8 +229,8 @@ export default function OrderDetail() {
                                 <span>${Number(order.total_price).toFixed(2)}</span>
                             </div>
                             {order.status === 'pending' && (
-                                <Button 
-                                    variant="destructive" 
+                                <Button
+                                    variant="destructive"
                                     className="w-full mt-4"
                                     onClick={() => {
                                         // TODO: Implement cancel order functionality

@@ -259,7 +259,9 @@ const Cart = () => {
                                     <CardContent className="p-6">
                                         <div className="flex items-center space-x-4">
                                             <img
-                                                src={item.product?.images?.[0]?.url || "/placeholder.jpg"}
+                                                src={item.product?.images?.[0]?.url.startsWith('data:')
+                                                    ? item.product.images[0].url
+                                                    : item.product?.images?.[0]?.url || "/placeholder.jpg"}
                                                 alt={item.product?.name || "Product"}
                                                 className="w-20 h-20 object-cover rounded-lg"
                                             />

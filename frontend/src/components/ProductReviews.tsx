@@ -177,6 +177,8 @@ const ProductReviews = ({ productId }: ProductReviewsProps) => {
                         key={star}
                         onClick={() => setNewReview({ ...newReview, rating: star })}
                         className="hover:scale-110 transition-transform"
+                        title={`ให้คะแนน ${star} ดาว`}
+                        aria-label={`ให้คะแนน ${star} ดาว`}
                       >
                         <Star
                           className={`w-6 h-6 ${
