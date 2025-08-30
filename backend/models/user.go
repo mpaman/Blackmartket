@@ -15,9 +15,15 @@ type User struct {
 
 type Address struct {
 	gorm.Model
-	UserID  uint   `json:"user_id"`
-	Phone   string `json:"phone"`
-	Address string `json:"address"`
+	UserID     uint   `json:"user_id"`
+	FirstName  string `json:"first_name"`
+	LastName   string `json:"last_name"`
+	Email      string `json:"email"`
+	Phone      string `json:"phone"`
+	Address    string `json:"address"`
+	City       string `json:"city"`
+	PostalCode string `json:"postal_code"`
+	IsDefault  bool   `json:"is_default"`
 }
 type SocialLogin struct {
 	Token    string `json:"token"`

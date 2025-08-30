@@ -3,4 +3,5 @@ export interface Payment {
   order_id: number;
   method: string;
   amount: number;
+  status: string;
 }

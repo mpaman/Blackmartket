@@ -7,4 +7,5 @@ type Payment struct {
 	OrderID   uint    `json:"order_id"`
 	Method    string  `json:"method"`  
 	Amount    float64 `json:"amount"` 
+	Status    string  `json:"status"`
 }

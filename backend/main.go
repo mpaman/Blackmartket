@@ -51,6 +51,12 @@ func SetupRouter() *gin.Engine {
 	auth.POST("/orders", controllers.CreateOrder)
 	auth.GET("/orders", controllers.GetAllOrders)
 	auth.GET("/orders/:id", controllers.GetOrderByID)
+	auth.PUT("/orders/:id/status", controllers.UpdateOrderStatus)
+
+	// Checkout
+	auth.GET("/checkout", controllers.CreateCheckoutSession)
+	auth.POST("/checkout", controllers.ProcessCheckout)
+	auth.GET("/checkout/order/:id", controllers.GetOrderStatus)
 
 	// Payment
 	auth.POST("/payments", controllers.CreatePayment)

@@ -56,6 +56,7 @@ func SetupDatabase() {
 		&models.OrderItem{},
 		&models.Payment{},
 		&models.Address{},
+		&models.SocialLogin{},
 	)
 
 	hashedPassword, _ := HashPassword("1")

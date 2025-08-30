@@ -6,5 +6,4 @@ export interface CartItem {
   product_id: number;
   product: Product;
   quantity: number;
-  price?: number; // fallback price if needed
 }

@@ -32,7 +32,7 @@ const Index = () => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");
     const [categories, setCategories] = useState<Category[]>([]);
-    
+
     // User profile data
     const [userProfile, setUserProfile] = useState({
         name: "",
@@ -65,7 +65,7 @@ const Index = () => {
             const userName = localStorage.getItem("user_name") || "";
             const userEmail = localStorage.getItem("user_email") || "";
             const userProfileImage = localStorage.getItem("user_profile_image") || "";
-            
+
             setUserProfile({
                 name: userName,
                 email: userEmail,
@@ -117,14 +117,14 @@ const Index = () => {
         localStorage.removeItem("user_name");
         localStorage.removeItem("user_email");
         localStorage.removeItem("user_profile_image");
-        
+
         // Clear user profile state
         setUserProfile({
             name: "",
             email: "",
             profileImage: ""
         });
-        
+
         window.location.reload();
     };
 
@@ -209,13 +209,13 @@ const Index = () => {
                                     <DropdownMenuTrigger asChild>
                                         <Button variant="ghost" size="icon" className="rounded-full p-0">
                                             <Avatar className="h-8 w-8">
-                                                <AvatarImage 
-                                                    src={userProfile.profileImage || "/avatar.jpg"} 
-                                                    alt={userProfile.name || "User"} 
+                                                <AvatarImage
+                                                    src={userProfile.profileImage || "/avatar.jpg"}
+                                                    alt={userProfile.name || "User"}
                                                 />
                                                 <AvatarFallback className="text-sm font-medium">
-                                                    {userProfile.name 
-                                                        ? userProfile.name.slice(0, 2).toUpperCase() 
+                                                    {userProfile.name
+                                                        ? userProfile.name.slice(0, 2).toUpperCase()
                                                         : "US"}
                                                 </AvatarFallback>
                                             </Avatar>
@@ -224,13 +224,13 @@ const Index = () => {
                                     <DropdownMenuContent className="w-56 mt-2" align="end">
                                         <div className="flex items-center space-x-3 p-3 border-b">
                                             <Avatar className="h-10 w-10">
-                                                <AvatarImage 
-                                                    src={userProfile.profileImage || "/avatar.jpg"} 
-                                                    alt={userProfile.name || "User"} 
+                                                <AvatarImage
+                                                    src={userProfile.profileImage || "/avatar.jpg"}
+                                                    alt={userProfile.name || "User"}
                                                 />
                                                 <AvatarFallback className="text-sm font-medium">
-                                                    {userProfile.name 
-                                                        ? userProfile.name.slice(0, 2).toUpperCase() 
+                                                    {userProfile.name
+                                                        ? userProfile.name.slice(0, 2).toUpperCase()
                                                         : "US"}
                                                 </AvatarFallback>
                                             </Avatar>
@@ -247,6 +247,9 @@ const Index = () => {
                                         <DropdownMenuItem onClick={() => navigate("/profile")}>
                                             <User className="mr-2 h-4 w-4" />
                                             My Profile
+                                        </DropdownMenuItem>
+                                        <DropdownMenuItem onClick={() => navigate('/orders')}>
+                                            My Orders
                                         </DropdownMenuItem>
                                         <DropdownMenuItem onClick={() => navigate('/seller-management')}>
                                             <ShoppingCart className="mr-2 h-4 w-4" />
@@ -304,6 +307,14 @@ const Index = () => {
                             >
                                 All Categories
                             </button>
+                            {isLoggedIn && (
+                                <button
+                                    onClick={() => navigate('/checkout')}
+                                    className="text-blue-600 hover:text-blue-800 font-medium text-sm"
+                                >
+                                    🧪 Test Checkout
+                                </button>
+                            )}
                             <button
                                 onClick={() => handleCategoryClick('Electronics')}
                                 className="text-gray-600 hover:text-green-600 text-sm hidden sm:block"

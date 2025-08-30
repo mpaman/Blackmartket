@@ -164,3 +164,45 @@ export const changePassword = (data: {
 export const GetUserAddresses = () =>
   axios.get(`${apiUrl}/api/addresses`, authHeader());
 
+// Checkout APIs
+export const getCheckoutSession = () =>
+  axios.get(`${apiUrl}/api/checkout`, authHeader());
+
+export const processCheckout = (data: {
+  shipping_address: {
+    first_name: string;
+    last_name: string;
+    email: string;
+    phone: string;
+    address: string;
+    city: string;
+    postal_code: string;
+    is_default: boolean;
+  };
+  payment_method: string;
+}) =>
+  axios.post(`${apiUrl}/api/checkout`, data, authHeader());
+
+export const getOrderStatus = (orderId: number) =>
+  axios.get(`${apiUrl}/api/checkout/order/${orderId}`, authHeader());
+
+export const getUserOrders = async () => {
+  const token = localStorage.getItem("token");
+  const response = await axios.get(`${apiUrl}/api/orders`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+  return response.data;
+};
+
+export const getOrderById = async (orderId: string) => {
+  const token = localStorage.getItem("token");
+  const response = await axios.get(`${apiUrl}/api/orders/${orderId}`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+  return response.data;
+};
+

@@ -9,4 +9,7 @@ export interface Order {
   address_id: number;
   address?: Address;
   items: OrderItem[];
+  created_at: string;
+  updated_at: string;
+  
 }
