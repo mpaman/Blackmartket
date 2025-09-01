@@ -1,10 +1,22 @@
 import { useState, useEffect } from 'react';
 import { getCartCount } from '@/services/api';
+import { useUserProfile } from './use-user-profile';
+
+const isTokenExpired = (token: string): boolean => {
+  try {
+    const payload = JSON.parse(atob(token.split('.')[1]));
+    const currentTime = Date.now() / 1000;
+    return payload.exp < currentTime;
+  } catch {
+    return true;
+  }
+};
 
 export const useCart = () => {
   const [cartCount, setCartCount] = useState(0);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [loading, setLoading] = useState(true);
+  const { userProfile, loadUserProfile, clearUserProfile } = useUserProfile();
 
   const checkAuthStatus = () => {
     const token = localStorage.getItem('token');
@@ -45,6 +57,27 @@ export const useCart = () => {
     }
   };
 
+  // Check authentication status
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    const tokenExpired = token ? isTokenExpired(token) : true;
+    
+    if (token && !tokenExpired) {
+        setIsLoggedIn(true);
+        loadUserProfile(); // Load user profile when logged in
+        fetchCartCount();
+    } else {
+        setIsLoggedIn(false);
+        clearUserProfile(); // Clear profile when not logged in
+        setCartCount(0);
+        
+        if (token && tokenExpired) {
+            // Clear expired token
+            localStorage.clear();
+        }
+    }
+}, []);
+
   useEffect(() => {
     fetchCartCount();
   }, []);
@@ -64,5 +97,8 @@ export const useCart = () => {
     isLoggedIn,
     loading,
     refreshCartCount,
+    userProfile,
+    loadUserProfile,
+    clearUserProfile
   };
 };

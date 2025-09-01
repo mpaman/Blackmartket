@@ -20,22 +20,24 @@ import {
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import type { Category } from "@/types/Category";
+import { useUserProfile } from "@/hooks/use-user-profile";
 
 const Index = () => {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
     const [isLoginOpen, setIsLoginOpen] = useState(false);
-    const [searchQuery, setSearchQuery] = useState(""); // Add search state
+    const [searchQuery, setSearchQuery] = useState("");
     const navigate = useNavigate();
     const { addToWishlist, removeFromWishlist, isInWishlist, wishlistCount } = useWishlist();
     const { toast } = useToast();
     const { cartCount, isLoggedIn, refreshCartCount } = useCart();
+    const { userProfile, loadUserProfile, clearUserProfile } = useUserProfile();
     const [products, setProducts] = useState<Product[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");
     const [categories, setCategories] = useState<Category[]>([]);
 
     // User profile data
-    const [userProfile, setUserProfile] = useState({
+    const [userProfileData, setUserProfileData] = useState({
         name: "",
         email: "",
         profileImage: ""
@@ -60,18 +62,12 @@ const Index = () => {
             .catch(() => setCategories([]));
     }, []);
 
-    // Load user profile data
+    // Load user profile when logged in
     useEffect(() => {
         if (isLoggedIn) {
-            const userName = localStorage.getItem("user_name") || "";
-            const userEmail = localStorage.getItem("user_email") || "";
-            const userProfileImage = localStorage.getItem("user_profile_image") || "";
-
-            setUserProfile({
-                name: userName,
-                email: userEmail,
-                profileImage: userProfileImage
-            });
+            loadUserProfile();
+        } else {
+            clearUserProfile();
         }
     }, [isLoggedIn]);
 
@@ -112,20 +108,8 @@ const Index = () => {
     };
 
     const handleLogout = () => {
-        localStorage.removeItem("token");
-        localStorage.removeItem("token_type");
-        localStorage.removeItem("user_id");
-        localStorage.removeItem("user_name");
-        localStorage.removeItem("user_email");
-        localStorage.removeItem("user_profile_image");
-
-        // Clear user profile state
-        setUserProfile({
-            name: "",
-            email: "",
-            profileImage: ""
-        });
-
+        localStorage.clear();
+        clearUserProfile();
         window.location.reload();
     };
 
@@ -165,6 +149,24 @@ const Index = () => {
 
     const handleSearchInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         setSearchQuery(e.target.value);
+    };
+
+    // Helper function to get proper image URL
+    const getProfileImageUrl = (imageUrl: string) => {
+        if (!imageUrl) return "/avatar.jpg";
+        
+        // If it's a base64 data URL, return as is
+        if (imageUrl.startsWith('data:')) {
+            return imageUrl;
+        }
+        
+        // If it's a relative URL, prepend the backend URL
+        if (imageUrl.startsWith('/')) {
+            return `http://localhost:8000${imageUrl}`;
+        }
+        
+        // Otherwise return as is (full URL)
+        return imageUrl;
     };
 
     return (
@@ -230,7 +232,7 @@ const Index = () => {
                                         <Button variant="ghost" size="icon" className="rounded-full p-0">
                                             <Avatar className="h-8 w-8">
                                                 <AvatarImage
-                                                    src={userProfile.profileImage || "/avatar.jpg"}
+                                                    src={getProfileImageUrl(userProfile.profileImage)}
                                                     alt={userProfile.name || "User"}
                                                 />
                                                 <AvatarFallback className="text-sm font-medium">
@@ -245,7 +247,7 @@ const Index = () => {
                                         <div className="flex items-center space-x-3 p-3 border-b">
                                             <Avatar className="h-10 w-10">
                                                 <AvatarImage
-                                                    src={userProfile.profileImage || "/avatar.jpg"}
+                                                    src={getProfileImageUrl(userProfile.profileImage)}
                                                     alt={userProfile.name || "User"}
                                                 />
                                                 <AvatarFallback className="text-sm font-medium">

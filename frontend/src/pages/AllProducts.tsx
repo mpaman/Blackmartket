@@ -30,6 +30,7 @@ import type { Product } from "@/types/Product";
 import type { Category } from "@/types/Category";
 import type { CartItem } from "@/types/CartItem";
 import { LoginDialog } from "@/components/LoginDialog";
+import { useUserProfile } from "@/hooks/use-user-profile";
 
 // Local interface for localStorage cart items
 
@@ -48,6 +49,7 @@ const AllProducts = () => {
     const [searchParams, setSearchParams] = useSearchParams();
     const { addToWishlist, removeFromWishlist, isInWishlist, wishlistCount } = useWishlist();
     const { cartCount, isLoggedIn, refreshCartCount } = useCart();
+    const { userProfile, loadUserProfile, clearUserProfile } = useUserProfile();
 
     const [currentPage, setCurrentPage] = useState(1);
     const [sortBy, setSortBy] = useState("newest");
@@ -61,13 +63,6 @@ const AllProducts = () => {
     const [loading, setLoading] = useState(true);
     const [categoriesLoading, setCategoriesLoading] = useState(true);
     const [error, setError] = useState("");
-
-    // User profile data
-    const [userProfile, setUserProfile] = useState({
-        name: "",
-        email: "",
-        profileImage: ""
-    });
 
     // Check for search and category parameters from URL
     useEffect(() => {
@@ -115,15 +110,9 @@ const AllProducts = () => {
     // Load user profile data
     useEffect(() => {
         if (isLoggedIn) {
-            const userName = localStorage.getItem("user_name") || "";
-            const userEmail = localStorage.getItem("user_email") || "";
-            const userProfileImage = localStorage.getItem("user_profile_image") || "";
-
-            setUserProfile({
-                name: userName,
-                email: userEmail,
-                profileImage: userProfileImage
-            });
+            loadUserProfile();
+        } else {
+            clearUserProfile();
         }
     }, [isLoggedIn]);
 
@@ -167,7 +156,7 @@ const AllProducts = () => {
                 return b.price - a.price;
             case "rating":
                 // If you have rating field, use it here
-                return 0; // placeholder
+                return 0;
             default:
                 return b.ID - a.ID; // newest first
         }
@@ -297,22 +286,24 @@ const AllProducts = () => {
         }
     };
 
-    
+    // Helper function to get proper image URL
+    const getProfileImageUrl = (imageUrl: string) => {
+        if (!imageUrl) return "/avatar.jpg";
+        
+        if (imageUrl.startsWith('data:')) {
+            return imageUrl;
+        }
+        
+        if (imageUrl.startsWith('/')) {
+            return `http://localhost:8000${imageUrl}`;
+        }
+        
+        return imageUrl;
+    };
+
     const handleLogout = () => {
-        localStorage.removeItem("token");
-        localStorage.removeItem("token_type");
-        localStorage.removeItem("user_id");
-        localStorage.removeItem("user_name");
-        localStorage.removeItem("user_email");
-        localStorage.removeItem("user_profile_image");
-
-        // Clear user profile state
-        setUserProfile({
-            name: "",
-            email: "",
-            profileImage: ""
-        });
-
+        localStorage.clear();
+        clearUserProfile();
         window.location.reload();
     };
 
@@ -392,7 +383,7 @@ const AllProducts = () => {
                                         <Button variant="ghost" size="icon" className="rounded-full p-0">
                                             <Avatar className="h-8 w-8">
                                                 <AvatarImage
-                                                    src={userProfile.profileImage || "/avatar.jpg"}
+                                                    src={getProfileImageUrl(userProfile.profileImage)}
                                                     alt={userProfile.name || "User"}
                                                 />
                                                 <AvatarFallback className="text-sm font-medium">
@@ -407,7 +398,7 @@ const AllProducts = () => {
                                         <div className="flex items-center space-x-3 p-3 border-b">
                                             <Avatar className="h-10 w-10">
                                                 <AvatarImage
-                                                    src={userProfile.profileImage || "/avatar.jpg"}
+                                                    src={getProfileImageUrl(userProfile.profileImage)}
                                                     alt={userProfile.name || "User"}
                                                 />
                                                 <AvatarFallback className="text-sm font-medium">
