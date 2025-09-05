@@ -5,7 +5,7 @@ import type { Category } from "@/types/Category";
 import type { Cart } from "@/types/Cart";
 import type { CartItem } from "@/types/CartItem";
 import type { Address } from "@/types/Address";
-const apiUrl = "http://localhost:8000";
+const apiUrl = import.meta.env.VITE_API_URL || `http://${window.location.hostname}:8000`;
 
 const authHeader = () => {
   const token = localStorage.getItem("token");

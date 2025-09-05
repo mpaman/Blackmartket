@@ -93,5 +93,5 @@ func main() {
 	config.ConnectionDB()
 	config.SetupDatabase()
 
-	r.Run("localhost:" + PORT)
+	r.Run("0.0.0.0:" + PORT) // Listen on all network interfaces
 }

@@ -10,4 +10,8 @@ export default defineConfig({
       "@": path.resolve(__dirname, "./src"),
     },
   },
+  server: {
+    host: true, // ✅ เปิดรับ connection จาก network
+    port: 5173, // หรือกำหนดพอร์ตเอง เช่น 3000
+  },
 });
